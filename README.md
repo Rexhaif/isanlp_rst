@@ -1,4 +1,4 @@
-![Python 3.6](https://img.shields.io/badge/python-3.7-green.svg)
+![Python 3.7](https://img.shields.io/badge/python-3.7-green.svg)
 
 # IsaNLP RST Parser
 This Python 3 library provides RST parser for Russian based on neural network models trained on [RuRSTreebank](https://rstreebank.ru/) Russian discourse corpus. The parser should be used in conjunction with [IsaNLP library](https://github.com/IINemo/isanlp) and can be considered its module.  
@@ -8,7 +8,7 @@ This Python 3 library provides RST parser for Russian based on neural network mo
 1. Install IsaNLP and its dependencies:
 ```
 pip install grpcio
-pip install git+https://github.com/IINemo/isanlp.git@discourse
+pip install git+https://github.com/IINemo/isanlp.git
 ```  
 
 2. Deploy docker containers for syntax and discourse parsing:  
@@ -43,40 +43,50 @@ ppl = PipelineCommon([
      ['text', 'tokens', 'sentences', 'postag', 'morph', 'lemma', 'syntax_dep_tree'],
      {'rst': 'rst'})
 ])
-res = ppl("Президент Филиппин заявил, что поедет на дачу, если будут беспорядки.")
+
+text = (
+"Новости о грядущей эмиссии в США обвалили доллар и подняли цену золота. При этом рост количества "
+"долларов пока не зафиксирован. Со швейцарским франком ситуация противоположная: стало известно, ч"
+"то в феврале денежная масса Швейцарии увеличилась на 3.5%, однако биржевой курс франка и его покуп"
+"ательная способность за неделю выросли."
+)
+
+res = ppl(text)
 #
 ```   
 4. The `res` variable should contain all annotations including RST annotations stored in `res['rst']`; each tree anotation in list represents one or more paragraphs of the given text.
 
 ```
-{'text': 'Президент Филиппин заявил, что поедет на дачу, если будут беспорядки.',
- 'sentences': [<isanlp.annotation.Sentence at 0x7fc9dde12990>],
- 'tokens': [<isanlp.annotation.Token at 0x7fc9dde12950>, ...],
- 'lemma': [['президент', ...]],
- 'syntax_dep_tree': [[<isanlp.annotation.WordSynt at 0x7fc9dddb7b10>, ...]],
- 'ud_postag': [['NOUN', 'PROPN', ...]],
- 'postag': [['NOUN', 'NOUN', ...]],
- 'morph': [[{'fPOS': 'NOUN',
-    'Gender': 'Masc',
-    'Animacy': 'Anim',
-    'Case': 'Nom',
-    'Number': 'Sing'},
-   ...]],
- 'rst': [<isanlp.annotation_rst.DiscourseUnit at 0x7fc9dddcbd90>]}
-```  
+{'text': 'Новости о грядущей эмиссии ...',
+ 'sentences': [<isanlp.annotation.Sentence at 0x7f833dee07d0>, ...],
+ 'tokens': [<isanlp.annotation.Token at 0x7f833dee0910>, ...],
+ 'lemma': [['новость', ...], ...],
+ 'syntax_dep_tree': [[<isanlp.annotation.WordSynt at 0x7f833deddc10>, ...], ...],
+ 'ud_postag': [['NOUN', ...], ...],
+ 'postag': [['NOUN', ...], ...],
+ 'morph': [[{'fPOS': 'NOUN', 'Gender': 'Fem', ...}, ...], ...],
+ 'rst': [<isanlp.annotation_rst.DiscourseUnit at 0x7f833defa5d0>]}
+```
+
 5. The variable `res['rst']` can be visualized as:  
-<img src="example_tree.png" width="350">
+<img src="examples/example.rs3.png" width="700">
 
 6. To convert DiscourseUnit objects to .rs3 file with visualization, run:
-```python 
 
-from src.isanlp_rst.export.to_rs3 import ForestExporter  # for list of units (whole document)
-from src.isanlp_rst.export.to_rs3 import Exporter  # for single unit (one tree)
+```python
 
+res['rst'][0].to_rs3('first_tree_filename.rs3')
+```
+
+7. To convert all DiscourseUnits in a document as a single .rs3 file with multiple trees, run:
+
+```python
+
+from isanlp.annotation_rst import ForestExporter
 exporter = ForestExporter(encoding='utf8')
 exporter(res['rst'], 'filename.rs3')
 ```
-It is recommended to open the generated files with [RSTTool](http://www.wagsoft.com/RSTTool/).
+It is recommended to open the generated .rs3 files with [RSTTool](http://www.wagsoft.com/RSTTool/).
 
 ## Package overview  
 1. The discourse parser. Is implemented in `ProcessorRST` class. Path: `src/isanlp_rst/processor_rst.py`.

@@ -26,8 +26,20 @@ COPY src/isanlp_rst /src/isanlp_rst
 COPY pipeline_object.py /src/isanlp_rst/pipeline_object.py
 COPY models /models
 
-RUN curl -O http://files.deeppavlov.ai/deeppavlov_data/bert/rubert_cased_L-12_H-768_A-12_pt.tar.gz && tar -xzvf rubert_cased_L-12_H-768_A-12_pt.tar.gz
-RUN python -c "from allennlp.predictors import Predictor; predictor = Predictor.from_path('models/tony_segmentator/model.tar.gz')"
+### Uncomment this section if embedders are not in the current directory
+## ELMo
+#RUN curl -O http://vectors.nlpl.eu/repository/20/195.zip && unzip 195.zip && rm 195.zip
+#RUN mkdir rsv_elmo && mv model.hdf5 rsv_elmo/model.hdf5 && mv options.json rsv_elmo/options.json
+## RuBERT
+#RUN curl -O http://files.deeppavlov.ai/deeppavlov_data/bert/rubert_cased_L-12_H-768_A-12_pt.tar.gz && tar -xzvf rubert_cased_L-12_H-768_A-12_pt.tar.gz && rm rubert_cased_L-12_H-768_A-12_pt.tar.gz
+## fastText embeddings
+#RUN curl -O http://files.deeppavlov.ai/embeddings/ft_native_300_ru_wiki_lenta_nltk_word_tokenize/ft_native_300_ru_wiki_lenta_nltk_word_tokenize.vec
+
+COPY rsv_elmo /rsv_elmo
+# COPY rubert_cased_L-12_H-768_A-12_pt /rubert_cased_L-12_H-768_A-12_pt
+
+## Check RuBERT
+RUN python -c "from allennlp.predictors import Predictor; predictor = Predictor.from_path('models/segmenter_neural/model.tar.gz')"
 
 ENV PYTHONPATH=/src/isanlp_rst/
 CMD [ "python", "/start.py", "-m", "pipeline_object", "-a", "create_pipeline", "--no_multiprocessing", "True"]

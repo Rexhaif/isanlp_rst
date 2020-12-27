@@ -3,15 +3,17 @@ import os
 import numpy as np
 from allennlp.predictors import Predictor
 from isanlp.annotation_rst import DiscourseUnit
-import torch
+from symbol_map import SYMBOL_MAP
 
 
 class AllenNLPSegmenter:
 
-    def __init__(self, model_dir_path):
-        self._model_path = os.path.join(model_dir_path, 'tony_segmentator', 'model.tar.gz')
-        self.predictor = Predictor.from_path(self._model_path)
+    def __init__(self, model_dir_path, cuda_device=-1):
+        self._model_path = os.path.join(model_dir_path, 'segmenter_neural', 'model.tar.gz')
+        self._cuda_device = cuda_device
+        self.predictor = Predictor.from_path(self._model_path, cuda_device=self._cuda_device)
         self._separator = 'U-S'
+        self._symbol_map = SYMBOL_MAP
 
     def __call__(self, annot_text, annot_tokens, annot_sentences, annot_lemma, annot_postag, annot_synt_dep_tree,
                  start_id=0):
@@ -37,7 +39,7 @@ class AllenNLPSegmenter:
             # if it is not a point in a list
             if len(pred) > 0:
                 if i > 0:
-                    if predictions[i-1]['words'][1] == '.' and predictions[i-1]['words'][0] in "0123456789":
+                    if predictions[i - 1]['words'][1] == '.' and predictions[i - 1]['words'][0] in "0123456789":
                         pred[0] = False
                 else:
                     pred[0] = True
@@ -49,7 +51,7 @@ class AllenNLPSegmenter:
                         pred[j + 1] = False
                     else:
                         pred[j] = False
-                        
+
             result += list(pred)
 
         return np.argwhere(np.array(result) == True)[:, 0]
@@ -88,41 +90,8 @@ class AllenNLPSegmenter:
         return edus
 
     def _prepare_token(self, token):
-        symbol_map = {
-            'x': 'х',
-            'X': 'X',
-            'y': 'у',
-            '—': '-',
-            '“': '«',
-            '‘': '«',
-            '”': '»',
-            '’': '»',
-            '😆': '😄',
-            '😊': '😄',
-            '😑': '😄',
-            '😔': '😄',
-            '😉': '😄',
-            '❗': '😄',
-            '🤔': '😄',
-            '😅': '😄',
-            '⚓': '😄',
-            'ε': 'α',
-            'ζ': 'α',
-            'η': 'α',
-            'μ': 'α',
-            'δ': 'α',
-            'λ': 'α',
-            'ν': 'α',
-            'β': 'α',
-            'γ': 'α',
-            'と': '尋',
-            'の': '尋',
-            '神': '尋',
-            '隠': '尋',
-            'し': '尋',
-        }
 
-        for key, value in symbol_map.items():
+        for key, value in self._symbol_map.items():
             token = token.replace(key, value)
 
         for keyword in ['www', 'http']:
