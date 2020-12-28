@@ -18,10 +18,9 @@ env:
   IMAGE_NAME: isanlp_segmenter
 
 jobs:
-  push:
+  build_and_push:
     # Ensure test job passes before pushing image.
     runs-on: ubuntu-latest
-    if: github.event_name == 'push'
 
     steps:
       - uses: actions/checkout@v2
