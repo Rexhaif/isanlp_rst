@@ -35,8 +35,9 @@ COPY models /models
 ## fastText embeddings
 #RUN curl -O http://files.deeppavlov.ai/embeddings/ft_native_300_ru_wiki_lenta_nltk_word_tokenize/ft_native_300_ru_wiki_lenta_nltk_word_tokenize.vec
 
-COPY rsv_elmo /rsv_elmo
+# COPY rsv_elmo /rsv_elmo
 # COPY rubert_cased_L-12_H-768_A-12_pt /rubert_cased_L-12_H-768_A-12_pt
+RUN curl -O https://rexhaif.keybase.pub/model.tar.gz && mkdir -p /models/segmenter_neural/ && mv model.tar.gz /models/segmenter_neural/model.tar.gz
 
 ## Check RuBERT
 RUN python -c "from allennlp.predictors import Predictor; predictor = Predictor.from_path('models/segmenter_neural/model.tar.gz')"
